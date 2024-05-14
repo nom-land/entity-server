@@ -1,0 +1,30 @@
+{
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup",
+    "lint": "tsc --noEmit",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.11.1",
+    "bunyan": "^1.8.15",
+    "crossbell": "^1.11.9",
+    "dotenv": "^16.4.5",
+    "entity-types": "^0.1.4",
+    "hono": "^4.3.5",
+    "md5": "^2.3.0",
+    "nomland.js": "^0.5.10",
+    "punycode": "^2.3.1",
+    "viem": "^2.10.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bunyan": "^1.8.11",
+    "@types/md5": "^2.3.5",
+    "@types/node": "^20.11.17",
+    "@types/punycode": "^2.1.4",
+    "tsup": "^8.0.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.5"
+  }
+}
