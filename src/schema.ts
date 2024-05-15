@@ -3,8 +3,8 @@ import { union, z } from "zod";
 
 export const submitLogSchema = z.object({
     characterId: union([z.string(), z.number()]), // character id
-    appKey: z.custom<`0x${string}`>((val: any) => /^A/.test(val)),
-    appSig: z.custom<`0x${string}`>((val: any) => /^A/.test(val)), // app signature
+    appKey: z.custom<`0x${string}`>((val: any) => /^0x/.test(val)),
+    appSig: z.custom<`0x${string}`>((val: any) => /^0x/.test(val)), // app signature
 });
 
 export const createRequestSchema = z.object({
