@@ -3,12 +3,18 @@ import { createNewEntityIfNotExist } from "./crossbell";
 import { hashOf } from "./utils";
 import { Entity } from "entity-types";
 
+export interface SubmitLog {
+    characterId: Numberish;
+    appKey: `0x${string}`;
+    appSig: `0x${string}`;
+}
+
 // Get the entity from the metadata, if it doesn't exist, create it
 export async function getEntity(
     entity: Entity,
+    submitBy: SubmitLog,
     c: Contract,
     admin: `0x${string}`,
-    createdBy: Numberish,
     prod: boolean
 ): Promise<{
     handle: string;
@@ -28,7 +34,7 @@ export async function getEntity(
         admin,
         handle,
         entity,
-        createdBy
+        submitBy
     );
     return { handle, id: characterId.toString() };
 }

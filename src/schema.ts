@@ -1,9 +1,20 @@
 import { entitySchema } from "entity-types";
 import { union, z } from "zod";
 
+export const submitLogSchema = z.object({
+    characterId: union([z.string(), z.number()]), // character id
+    appKey: z.custom<`0x${string}`>((val: any) => /^A/.test(val)),
+    appSig: z.custom<`0x${string}`>((val: any) => /^A/.test(val)), // app signature
+});
+
 export const createRequestSchema = z.object({
     entity: entitySchema,
-    appSig: z.string(), // app signature
-    createdBy: union([z.string(), z.number()]), // character id
+    submittedBy: submitLogSchema,
     prod: z.boolean().optional(), // production or test
+});
+
+export const updateRequestSchema = z.object({
+    id: union([z.string(), z.number()]), // entity id
+    entity: entitySchema,
+    submittedBy: submitLogSchema,
 });

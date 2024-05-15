@@ -1,19 +1,14 @@
 import { CharacterMetadata, Contract, Numberish } from "crossbell";
 import { log } from "../logger";
 import { Entity } from "entity-types";
-
-interface UpdateLog {
-    characterId: Numberish;
-    appKey: `0x${string}`;
-    appSig: `0x${string}`;
-}
+import { SubmitLog } from ".";
 
 export const createNewEntityIfNotExist = async (
     c: Contract,
     admin: `0x${string}`,
     handle: string,
     metadata: Entity,
-    createdBy: Numberish
+    createdBy: SubmitLog
 ) => {
     const { data } = await c.character.getByHandle({ handle });
     if (data.characterId) {
@@ -28,15 +23,13 @@ export const createNewEntity = async (
     admin: `0x${string}`,
     handle: string,
     entity: Entity,
-    createdBy: Numberish
+    createdBy: SubmitLog
 ) => {
     const profile = {
         ...entity,
         created_by: {
-            characterId: createdBy,
-            appKey: "0x", // TODO: use app key
-            appSig: "0x", // TODO: app sig
-        } as UpdateLog,
+            ...createdBy,
+        },
         variant: "entity",
     } as CharacterMetadata;
     log.info(

@@ -1,7 +1,7 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { validator } from "hono/validator";
-import { createRequestSchema } from "./schema";
+import { createRequestSchema, updateRequestSchema } from "./schema";
 import { logger } from "hono/logger";
 import { getEntity } from "./entity";
 import { Contract } from "crossbell/contract";
@@ -32,12 +32,29 @@ app.post(
         // TODO: local chain options
         const { handle, id } = await getEntity(
             params.entity,
+            params.submittedBy,
             contract,
             admin,
-            params.createdBy,
             params.prod || false
         );
         return c.json({ handle, id });
+    }
+);
+
+app.use(logger());
+app.post(
+    "/editEntity",
+    validator("json", (value, c) => {
+        const parsed = updateRequestSchema.safeParse(value);
+        if (!parsed.success) {
+            return c.text("Invalid data", 401);
+        }
+        return parsed.data;
+    }),
+    async (c) => {
+        const params = c.req.valid("json");
+        // TODO: CHANGE THIS
+        return c.text("Not implemented", 501);
     }
 );
 
