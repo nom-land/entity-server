@@ -7,6 +7,7 @@ import { getEntity } from "./entity";
 import { Contract } from "crossbell/contract";
 import { privateKeyToAddress } from "viem/accounts";
 import "dotenv/config";
+import { log } from "./logger";
 
 const app = new Hono();
 
@@ -16,7 +17,7 @@ app.get("/", (c) => {
 
 app.use(logger());
 app.post(
-    "/create",
+    "/createEntity",
     validator("json", (value, c) => {
         const parsed = createRequestSchema.safeParse(value);
         // TODO: metadata is corresponding to the type
@@ -29,11 +30,6 @@ app.post(
     async (c) => {
         const params = c.req.valid("json");
         // TODO: local chain options
-        const privateKey = process.env.PRI_KEY as `0x${string}`;
-
-        const contract = new Contract(privateKey);
-        const admin = privateKeyToAddress(privateKey);
-
         const { handle, id } = await getEntity(
             params.entity,
             contract,
@@ -46,7 +42,11 @@ app.post(
 );
 
 const port = 3001;
-console.log(`Server is running on port ${port}`);
+const privateKey = process.env.PRI_KEY as `0x${string}`;
+const contract = new Contract(privateKey);
+const admin = privateKeyToAddress(privateKey);
+
+log.info(`🎉 Server is running on port ${port}`);
 
 serve({
     fetch: app.fetch,
