@@ -1,9 +1,13 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { validator } from "hono/validator";
-import { createRequestSchema, updateRequestSchema } from "./schema";
+import {
+    createRequestSchema,
+    searchRequestSchema,
+    updateRequestSchema,
+} from "./schema";
 import { logger } from "hono/logger";
-import { getEntity } from "./entity";
+import { getEntity, searchEntity } from "./entity";
 import { Contract } from "crossbell/contract";
 import { privateKeyToAddress } from "viem/accounts";
 import "dotenv/config";
@@ -11,11 +15,26 @@ import { log } from "./logger";
 
 const app = new Hono();
 
-app.get("/", (c) => {
-    return c.text("Hello Hono!");
-});
+app.use(logger((str) => (new Date(), str)));
+app.get(
+    "/entity/search",
+    validator("query", (value, c) => {
+        const parsed = searchRequestSchema.safeParse(value);
+        if (!parsed.success) {
+            return c.text("Invalid data", 401);
+        }
+        return parsed.data;
+    }),
+    async (c) => {
+        const url = c.req.valid("query").url;
+        const prod = c.req.valid("query").prod || false;
 
-app.use(logger());
+        const result = await searchEntity(url, contract, prod);
+        return c.json(result);
+    }
+);
+
+app.use(logger((str) => (new Date(), str)));
 app.post(
     "/entity/create",
     validator("json", (value, c) => {
@@ -41,9 +60,9 @@ app.post(
     }
 );
 
-app.use(logger());
+app.use(logger((str) => (new Date(), str)));
 app.post(
-    "//entity/edit",
+    "/entity/edit",
     validator("json", (value, c) => {
         const parsed = updateRequestSchema.safeParse(value);
         if (!parsed.success) {

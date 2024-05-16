@@ -1,4 +1,4 @@
-import { Contract, Numberish } from "crossbell";
+import { CharacterMetadata, Contract, Numberish } from "crossbell";
 import { createNewEntityIfNotExist } from "./crossbell";
 import { hashOf } from "./utils";
 import { Entity } from "entity-types";
@@ -38,3 +38,23 @@ export async function getEntity(
     );
     return { handle, id: characterId.toString() };
 }
+
+export const searchEntity = async (url: string, c: Contract, prod: boolean) => {
+    const prefix = prod ? "" : "test-";
+
+    const handle = prefix + hashOf(url, 12);
+
+    const { data } = await c.character.getByHandle({ handle });
+    if (data.characterId && data.metadata) {
+        const { type, connected_accounts, variant, ...metadata } =
+            data.metadata as CharacterMetadata & { variant: string };
+
+        return {
+            handle,
+            id: data.characterId.toString(),
+            metadata,
+        };
+    } else {
+        return null;
+    }
+};
