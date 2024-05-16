@@ -17,7 +17,7 @@ app.get("/", (c) => {
 
 app.use(logger());
 app.post(
-    "/createEntity",
+    "/entity/create",
     validator("json", (value, c) => {
         const parsed = createRequestSchema.safeParse(value);
         // TODO: metadata is corresponding to the type
@@ -43,7 +43,7 @@ app.post(
 
 app.use(logger());
 app.post(
-    "/editEntity",
+    "//entity/edit",
     validator("json", (value, c) => {
         const parsed = updateRequestSchema.safeParse(value);
         if (!parsed.success) {
