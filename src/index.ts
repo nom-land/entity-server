@@ -56,7 +56,7 @@ app.post(
             admin,
             params.prod || false
         );
-        return c.json({ handle, id });
+        return c.json({ handle, id, metadata: params.entity });
     }
 );
 

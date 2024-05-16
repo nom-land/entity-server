@@ -9,7 +9,11 @@ export const searchRequestSchema = z.object({
             message: "Invalid URL. Must start with 'http://' or 'https://'.",
         }
     ),
-    prod: z.boolean().optional(), // production or test
+    prod: z
+        .string()
+        .toLowerCase()
+        .transform((x) => x === "true")
+        .pipe(z.boolean()),
 });
 
 export const submitLogSchema = z.object({
@@ -21,7 +25,11 @@ export const submitLogSchema = z.object({
 export const createRequestSchema = z.object({
     entity: entitySchema,
     submittedBy: submitLogSchema,
-    prod: z.boolean().optional(), // production or test
+    prod: z
+        .string()
+        .toLowerCase()
+        .transform((x) => x === "true")
+        .pipe(z.boolean()),
 });
 
 export const updateRequestSchema = z.object({
