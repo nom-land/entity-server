@@ -10,10 +10,15 @@ export const searchRequestSchema = z.object({
         }
     ),
     prod: z
-        .string()
-        .toLowerCase()
-        .transform((x) => x === "true")
-        .pipe(z.boolean()),
+        .union([
+            z
+                .string()
+                .toLowerCase()
+                .transform((x) => x === "true")
+                .pipe(z.boolean()),
+            z.boolean(),
+        ])
+        .optional(),
 });
 
 export const submitLogSchema = z.object({
@@ -26,10 +31,15 @@ export const createRequestSchema = z.object({
     entity: entitySchema,
     submittedBy: submitLogSchema,
     prod: z
-        .string()
-        .toLowerCase()
-        .transform((x) => x === "true")
-        .pipe(z.boolean()),
+        .union([
+            z
+                .string()
+                .toLowerCase()
+                .transform((x) => x === "true")
+                .pipe(z.boolean()),
+            z.boolean(),
+        ])
+        .optional(),
 });
 
 export const updateRequestSchema = z.object({
