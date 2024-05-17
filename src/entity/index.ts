@@ -1,5 +1,5 @@
 import { CharacterMetadata, Contract, Numberish } from "crossbell";
-import { createNewEntityIfNotExist } from "./crossbell";
+import { createNewEntityIfNotExist } from "./create";
 import { hashOf } from "./utils";
 import { Entity } from "entity-types";
 

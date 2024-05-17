@@ -1,4 +1,4 @@
-import { CharacterMetadata, Contract, Numberish } from "crossbell";
+import { CharacterMetadata, Contract } from "crossbell";
 import { log } from "../logger";
 import { Entity } from "entity-types";
 import { SubmitLog } from ".";

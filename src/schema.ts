@@ -47,3 +47,21 @@ export const updateRequestSchema = z.object({
     entity: entitySchema,
     submittedBy: submitLogSchema,
 });
+
+export const markDuplicateRequestSchema = z.object({
+    copy: union([z.string(), z.number()]), // entity id
+    original: union([z.string(), z.number()]), // entity id
+    revert: z.union([
+        z
+            .string()
+            .toLowerCase()
+            .transform((x) => x === "true")
+            .pipe(z.boolean()),
+        z.boolean().optional(),
+    ]),
+    // revert the duplicate relationship, if it exists
+});
+
+export const getAllCopiesRequestSchema = z.object({
+    entityId: union([z.string(), z.number()]), // entity id
+});
