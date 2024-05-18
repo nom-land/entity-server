@@ -2,6 +2,7 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { validator } from "hono/validator";
 import {
+    batchGetAllCopiesRequestSchema,
     createRequestSchema,
     getAllCopiesRequestSchema,
     markDuplicateRequestSchema,
@@ -145,9 +146,33 @@ app.get(
     async (c) => {
         try {
             const entityId = c.req.valid("query").entityId;
-
             const copies = await getAllCopies(redisClient, entityId);
             return c.json(copies);
+        } catch (e) {
+            log.error(e);
+            return c.text("Internal Error.", 400);
+        }
+    }
+);
+
+app.get(
+    "entity/batchGetAllCopies",
+    validator("query", (value, c) => {
+        const parsed = batchGetAllCopiesRequestSchema.safeParse(value);
+        if (!parsed.success) {
+            return c.text("Invalid data", 401);
+        }
+        return parsed.data;
+    }),
+    async (c) => {
+        try {
+            const entityIds = c.req.valid("query").entityIds.split(",");
+            const result = [];
+            for (let id of entityIds) {
+                const copies = await getAllCopies(redisClient, id);
+                result.push(copies);
+            }
+            return c.json(result);
         } catch (e) {
             log.error(e);
             return c.text("Internal Error.", 400);
@@ -168,21 +193,6 @@ const start = async () => {
     const privateKey = process.env.PRI_KEY as `0x${string}`;
     contract = new Contract(privateKey);
     admin = privateKeyToAddress(privateKey);
-
-    // redisClient.set("69869", "");
-    // redisClient.set("69870", "");
-    // const metadata = await contract.character.get({ characterId: "69870" });
-    // console.log(metadata);
-    // await contract.character.changeMetadata({
-    //     characterId: "69870",
-    //     modifier: (metadata: CharacterMetadata | undefined) => {
-    //         if (!metadata) {
-    //             return {};
-    //         }
-    //         const { duplicate, ...rest } = metadata as any;
-    //         return rest;
-    //     },
-    // });
 
     log.info(`🎉 Server is running on port ${port}`);
 

@@ -63,5 +63,9 @@ export const markDuplicateRequestSchema = z.object({
 });
 
 export const getAllCopiesRequestSchema = z.object({
-    entityId: union([z.string(), z.number()]), // entity id
+    entityId: z.string(), // entity id
+});
+
+export const batchGetAllCopiesRequestSchema = z.object({
+    entityIds: z.string(), // entity ids
 });
