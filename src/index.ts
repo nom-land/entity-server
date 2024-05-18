@@ -1,5 +1,6 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { validator } from "hono/validator";
 import {
     batchGetAllCopiesRequestSchema,
@@ -28,6 +29,8 @@ const app = new Hono();
 let contract: Contract;
 let admin: `0x${string}`;
 let redisClient: any;
+
+app.use("/entity/*", cors());
 
 app.use(logger((str) => (new Date(), str)));
 app.get(
