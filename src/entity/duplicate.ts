@@ -87,21 +87,24 @@ export async function unmarkDuplicate(
 
 export async function getAllCopies(redis: any, entityId: Numberish) {
     const value = await redis.get(entityId.toString());
+    let original: string;
 
-    if (!value) return [];
+    if (!value) return {};
 
     const parsed = JSON.parse(value);
 
     if (parsed.duplicates instanceof Array) {
-        if (parsed.duplicates.length === 0) {
-            return [];
-        }
-        return (parsed.duplicates as Array<string>).concat(entityId.toString());
+        original = entityId.toString();
+        return {
+            original,
+            duplicates: parsed.duplicates as string[],
+        };
     } else if ("original" in parsed) {
-        const original = parsed.original;
-        const copies = await redis.get(original);
-        return (JSON.parse(copies).duplicates as Array<string>).concat(
-            original
-        );
+        original = parsed.original;
+        const duplicates = await redis.get(original);
+        return {
+            original,
+            duplicates: JSON.parse(duplicates).duplicates as string[],
+        };
     }
 }
