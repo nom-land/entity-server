@@ -1,6 +1,8 @@
 import { entitySchema } from "entity-types";
 import { union, z } from "zod";
 
+const hexString = z.custom<`0x${string}`>((val: any) => /^0x/.test(val));
+
 export const searchRequestSchema = z.object({
     url: z.string().refine(
         // TODO: support more protocols, e.g. ipfs://
@@ -23,8 +25,8 @@ export const searchRequestSchema = z.object({
 
 export const submitLogSchema = z.object({
     characterId: union([z.string(), z.number()]), // character id
-    appKey: z.custom<`0x${string}`>((val: any) => /^0x/.test(val)),
-    appSig: z.custom<`0x${string}`>((val: any) => /^0x/.test(val)), // app signature
+    appKey: hexString,
+    appSig: hexString, // app signature
 });
 
 export const createRequestSchema = z.object({
@@ -68,4 +70,18 @@ export const getAllCopiesRequestSchema = z.object({
 
 export const batchGetAllCopiesRequestSchema = z.object({
     entityIds: z.string(), // entity ids
+});
+
+export const SiweChallengeSchema = z.object({
+    address: hexString,
+    domain: z.string(),
+    uri: z.string(),
+    statement: z
+        .string()
+        .refine((value) => value.startsWith("Sign-in with Ethereum")),
+});
+
+export const SiweSigninSchema = z.object({
+    message: z.string(),
+    signature: z.string(),
 });

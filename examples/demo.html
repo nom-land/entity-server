@@ -1,0 +1,284 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Nomland Demo</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <style type="text/tailwindcss">
+    button {
+        @apply bg-amber-700 hover:bg-amber-900 text-white font-bold px-2 rounded;
+      }
+      code {
+        counter-reset: step;
+        counter-increment: step 0;
+      }
+
+      code .line::before {
+        content: counter(step);
+        counter-increment: step;
+        width: 1rem;
+        margin-right: 1.5rem;
+        display: inline-block;
+        text-align: right;
+        color: rgba(115, 138, 148, 0.4);
+      }
+    </style>
+</head>
+
+<body class="bg-amber-lightest font-mono">
+  <div id="root" class="container mx-auto m-5 md:prose-lg">
+    <div id="loading">Loading...</div>
+  </div>
+
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/shiki"></script>
+
+  <script type="text/babel" data-type="module" id="main-script">
+    /** @jsx h */
+    import { h, render } from 'https://esm.sh/preact@10';
+    import { useState } from 'https://esm.sh/preact@10/hooks';
+    import { ethers } from 'https://esm.sh/ethers@5';
+
+    console.log('all deps imported');
+
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+
+    const BACKEND_ADDR = './auth';
+
+    function UpdateInfo() {
+      return (
+        <div>
+          <p>Last updated: 2023-01-16</p>
+        </div>
+      );
+    }
+
+    function Demo() {
+      async function getChallenge({ address, domain, uri, statement }) {
+        console.log(
+          JSON.stringify({ address, domain, uri, statement })
+        )
+        const { message } = await fetch(`${BACKEND_ADDR}/challenge`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address, domain, uri, statement }),
+        }).then(async (res) => {
+          if (res.ok) {
+            return res.json();
+          } else {
+            const data = await res.json()
+            const error = JSON.stringify(data.error, null, '\t');
+            throw new Error('failed to get challenge: ' + error);
+          }
+        });
+        console.log('got challenge message from api', message);
+        return message;
+      }
+
+      async function signin(message, signature) {
+        const { token } = await fetch(`${BACKEND_ADDR}/signin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, signature }),
+        }).then((res) => {
+          if (res.ok) {
+            return res.json();
+          } else {
+            throw new Error('failed to get challenge');
+          }
+        });
+
+        console.log('login response', { token });
+
+        localStorage.setItem('siwe:token', token);
+
+        return token;
+      }
+
+      async function getAccount() {
+        const token = localStorage.getItem('siwe:token');
+        const res = await fetch(`${BACKEND_ADDR}/account`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).then((res) => {
+          if (res.ok) {
+            return res.json();
+          } else {
+            throw new Error('failed to get challenge');
+          }
+        });
+
+        return res;
+      }
+
+
+
+
+      const [connectStatus, setConnectStatus] = useState('Connect wallet');
+      function connectWallet() {
+        console.log('requesting account access...');
+        setConnectStatus('⏳ Please approve in your wallet...');
+        provider
+          .send('eth_requestAccounts', [])
+          .then(() => {
+            console.log('user approved request');
+            setConnectStatus('✅ Connected');
+          })
+          .catch(() => {
+            console.log('user rejected request');
+          });
+      }
+
+      const [signInStatus, setSignInStatus] = useState('SIWE');
+      async function signIn() {
+        console.log(
+          'requesting signature; please approve the request in your wallet...',
+        );
+
+        setSignInStatus('⏳ Please approve in your wallet...');
+
+        const message = await getChallenge({
+          address: await signer.getAddress(),
+          domain: window.location.hostname,
+          uri: window.location.href,
+          statement: 'Sign-in with Ethereum to the app.',
+        }).catch((err) => {
+          console.log('error', err);
+          setSignInStatus('❌ Failed to sign in. Click to try again.');
+          throw err;
+        });
+
+        const signature = await signer
+          .signMessage(message)
+          .then((res) => {
+            console.log('signature', res);
+            setSignInStatus('✅ Signed');
+            return res;
+          })
+          .catch((err) => {
+            console.log('error', err);
+            setSignInStatus('❌ Failed to sign in. Click to try again.');
+            throw err;
+          });
+
+        setSignInStatus('Signing in...');
+        const token = await signin(message, signature);
+
+        console.log('Signed in', { token });
+
+        setSignInStatus('✅ Signed in');
+      }
+
+      const [getInfoStatus, setGetInfoStatus] = useState('Get account info');
+      async function getInformation() {
+        setGetInfoStatus('Getting account info...');
+
+        const res = await getAccount();
+
+        console.log('get information response', res);
+
+        setGetInfoStatus(`✅ Got account info: ${res.address}`);
+      }
+
+
+      const [signOutStatus, setSignOutStatus] = useState('Sign out');
+      async function signOut() {
+        setSignOutStatus('Signing out...');
+
+        localStorage.removeItem('siwe:token');
+
+        setSignOutStatus('✅ Signed out');
+        setConnectStatus('Connect wallet');
+        setSignInStatus('Sign-in with Crossbell (or Ethereum)');
+        setGetInfoStatus('Get account info');
+        setSignOutStatus('Sign out');
+      }
+
+      return (
+        <div>
+          <p>This is a demo showing how to interact with Nomland backend.</p>
+          <p>
+            Please use the <a href="https://metamask.io">MetaMask</a> to
+            interact.
+          </p>
+          <p>
+            Please open the browser console to see the results of all protocol
+            interactions.
+          </p>
+
+          <h3> Setup </h3>
+          <p>
+            Step 1: <button onClick={connectWallet}>{connectStatus}</button>
+          </p>
+          <p>
+            Step 2: <button onClick={signIn}>{signInStatus}</button>
+          </p>
+          <p>
+            Step 3: <button onClick={getInformation}>{getInfoStatus}</button>
+          </p>
+
+          <h4> Clean up </h4>
+          <p>
+            <button
+              onClick={signOut}
+              disabled={!localStorage.getItem('siwe:token')}
+            >
+              {signOutStatus}
+            </button>
+          </p>
+        </div>
+      );
+    }
+
+    function Notice() {
+      return (
+        <div>
+          <h2>Notice</h2>
+          <p>
+            You need to set up the admin key in the backend <code>.env</code>{' '}
+            and also keep an amount of $CSB in the admin account.
+          </p>
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <h1>Nomland Entity Service</h1>
+          <hr />
+          <Demo />
+          <hr />
+          <Notice />
+        </div>
+      );
+    }
+
+    render(
+      <App />,
+      document.getElementById('root'),
+      document.getElementById('loading'),
+    );
+
+    const highlight = async () => {
+      const tss = document.getElementsByClassName('language-typescript');
+      const jsons = document.getElementsByClassName('language-json');
+      const highlighter = await shiki.getHighlighter({
+        theme: 'nord',
+        langs: ['typescript', 'json'],
+      });
+      [...tss].forEach((ts) => {
+        const html = highlighter.codeToHtml(ts.textContent, 'typescript');
+        ts.outerHTML = html;
+      });
+      [...jsons].forEach((json) => {
+        const html = highlighter.codeToHtml(json.textContent, 'json');
+        json.outerHTML = html;
+      });
+    };
+    highlight();
+  </script>
+</body>
+
+</html>

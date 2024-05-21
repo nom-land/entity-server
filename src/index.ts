@@ -11,7 +11,7 @@ import {
     updateRequestSchema,
 } from "./schema";
 import { logger } from "hono/logger";
-import { getEntity, searchEntity } from "./entity";
+import { getEntity, searchEntity } from "./entityService";
 import { Contract } from "crossbell/contract";
 import { privateKeyToAddress } from "viem/accounts";
 import "dotenv/config";
@@ -21,8 +21,12 @@ import {
     getAllCopies,
     markDuplicate,
     unmarkDuplicate,
-} from "./entity/duplicate";
-import { CharacterMetadata } from "crossbell";
+} from "./entityService/duplicate";
+import auth from "./auth";
+import { jwt } from "hono/jwt";
+import { readFile } from "fs/promises";
+import { resolve } from "path";
+import config from "./config";
 
 const app = new Hono();
 
@@ -30,7 +34,7 @@ let contract: Contract;
 let admin: `0x${string}`;
 let redisClient: any;
 
-app.use("/entity/*", cors());
+app.use("*", cors());
 
 app.use(logger((str) => (new Date(), str)));
 app.get(
@@ -77,6 +81,12 @@ app.post(
     }
 );
 
+app.use(
+    "/entity/*",
+    jwt({
+        secret: config.jwtSecret,
+    })
+);
 app.use(logger((str) => (new Date(), str)));
 app.post(
     "/entity/edit",
@@ -94,6 +104,12 @@ app.post(
     }
 );
 
+app.use(
+    "/entity/*",
+    jwt({
+        secret: config.jwtSecret,
+    })
+);
 app.use(logger((str) => (new Date(), str)));
 app.post(
     "/entity/markDuplicate",
@@ -183,6 +199,16 @@ app.get(
     }
 );
 
+app.get("demo", async (c) => {
+    const demoHtml = await readFile(
+        resolve(__dirname, "./../examples/demo.html"),
+        "utf-8"
+    );
+    return c.html(demoHtml);
+});
+
+app.route("/auth", auth);
+
 const start = async () => {
     // Redis
     redisClient = await createClient()
@@ -193,7 +219,7 @@ const start = async () => {
 
     // Contract
     const port = 3001;
-    const privateKey = process.env.PRI_KEY as `0x${string}`;
+    const privateKey = config.nomlandPrivateKey;
     contract = new Contract(privateKey);
     admin = privateKeyToAddress(privateKey);
 
