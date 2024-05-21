@@ -58,3 +58,42 @@ export const searchEntity = async (url: string, c: Contract, prod: boolean) => {
         return null;
     }
 };
+
+export const updateEntityMetadata = (
+    c: Contract,
+    characterId: Numberish,
+    newEntity: Entity,
+    updatedBy: SubmitLog
+) => {
+    return c.character.changeMetadata({
+        characterId,
+        modifier: (oldMetadata: CharacterMetadata | undefined) => {
+            if (!oldMetadata) {
+                return {};
+            }
+            const {
+                updated_by,
+                created_by,
+                type,
+                connected_accounts,
+                variant,
+                duplicate,
+            } = oldMetadata as any;
+
+            const new_updated_by = ((updated_by as SubmitLog[]) || []).concat([
+                updatedBy,
+            ]);
+
+            // TODO: wrap it in a type
+            return {
+                ...newEntity,
+                updated_by: new_updated_by,
+                created_by,
+                variant,
+                type,
+                connected_accounts,
+                duplicate,
+            } as CharacterMetadata;
+        },
+    });
+};

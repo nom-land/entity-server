@@ -11,7 +11,7 @@ import {
     updateRequestSchema,
 } from "./schema";
 import { logger } from "hono/logger";
-import { getEntity, searchEntity } from "./entityService";
+import { getEntity, searchEntity, updateEntityMetadata } from "./entityService";
 import { Contract } from "crossbell/contract";
 import { privateKeyToAddress } from "viem/accounts";
 import "dotenv/config";
@@ -27,6 +27,7 @@ import { jwt } from "hono/jwt";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
 import config from "./config";
+import { zValidator } from "@hono/zod-validator";
 
 const app = new Hono();
 
@@ -88,21 +89,17 @@ app.use(
     })
 );
 app.use(logger((str) => (new Date(), str)));
-app.post(
-    "/entity/edit",
-    validator("json", (value, c) => {
-        const parsed = updateRequestSchema.safeParse(value);
-        if (!parsed.success) {
-            return c.text("Invalid data", 401);
-        }
-        return parsed.data;
-    }),
-    async (c) => {
-        const params = c.req.valid("json");
-        // TODO: CHANGE THIS
-        return c.text("Not implemented", 501);
+app.post("/entity/edit", zValidator("json", updateRequestSchema), async (c) => {
+    const { id, entity, submittedBy } = c.req.valid("json");
+    try {
+        return c.json(
+            await updateEntityMetadata(contract, id, entity, submittedBy)
+        );
+    } catch (e) {
+        log.error(e);
+        return c.text("Internal Error.", 400);
     }
-);
+});
 
 app.use(
     "/entity/*",
