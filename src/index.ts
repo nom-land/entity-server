@@ -83,7 +83,6 @@ app.post(
 );
 
 app.use(
-    "/entity/*",
     jwt({
         secret: config.jwtSecret,
     })
@@ -102,7 +101,6 @@ app.post("/entity/edit", zValidator("json", updateRequestSchema), async (c) => {
 });
 
 app.use(
-    "/entity/*",
     jwt({
         secret: config.jwtSecret,
     })
