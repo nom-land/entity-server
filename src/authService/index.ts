@@ -2,6 +2,7 @@ import { sign } from "hono/jwt";
 import { SiweMessage, generateNonce } from "siwe";
 import { getAddress } from "viem";
 import { crossbell } from "viem/chains";
+import config from "../config";
 
 export async function generateChallenge({
     address,
@@ -43,7 +44,7 @@ export async function signin(
         exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365, // 1 year
     };
 
-    const token = await sign(jwtPayload, "secret");
+    const token = await sign(jwtPayload, config.jwtSecret);
 
     return token;
 }

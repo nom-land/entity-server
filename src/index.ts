@@ -11,7 +11,12 @@ import {
     updateRequestSchema,
 } from "./schema";
 import { logger } from "hono/logger";
-import { getEntity, searchEntity, updateEntityMetadata } from "./entityService";
+import {
+    getEntity,
+    getEntityById,
+    searchEntity,
+    updateEntityMetadata,
+} from "./entityService";
 import { Contract } from "crossbell/contract";
 import { privateKeyToAddress } from "viem/accounts";
 import "dotenv/config";
@@ -28,6 +33,7 @@ import { readFile } from "fs/promises";
 import { resolve } from "path";
 import config from "./config";
 import { zValidator } from "@hono/zod-validator";
+import { isAddressEqual } from "viem";
 
 const app = new Hono();
 
@@ -37,16 +43,24 @@ let redisClient: any;
 
 app.use("*", cors());
 
+app.use(
+    "/entity/edit",
+    jwt({
+        secret: config.jwtSecret,
+    })
+);
+
+app.use(
+    "/entity/markDuplicate",
+    jwt({
+        secret: config.jwtSecret,
+    })
+);
+
 app.use(logger((str) => (new Date(), str)));
 app.get(
     "/entity/search",
-    validator("query", (value, c) => {
-        const parsed = searchRequestSchema.safeParse(value);
-        if (!parsed.success) {
-            return c.text("Invalid data", 401);
-        }
-        return parsed.data;
-    }),
+    zValidator("query", searchRequestSchema),
     async (c) => {
         const url = c.req.valid("query").url;
         const prod = c.req.valid("query").prod || false;
@@ -55,6 +69,13 @@ app.get(
         return c.json(result);
     }
 );
+
+app.use(logger((str) => (new Date(), str)));
+app.get("/entity/:id", async (c) => {
+    const id = c.req.param("id");
+    const result = await getEntityById(contract, admin, id);
+    return c.json(result);
+});
 
 app.use(logger((str) => (new Date(), str)));
 app.post(
@@ -82,29 +103,39 @@ app.post(
     }
 );
 
-app.use(
-    jwt({
-        secret: config.jwtSecret,
-    })
-);
 app.use(logger((str) => (new Date(), str)));
 app.post("/entity/edit", zValidator("json", updateRequestSchema), async (c) => {
     const { id, entity, submittedBy } = c.req.valid("json");
     try {
-        return c.json(
-            await updateEntityMetadata(contract, id, entity, submittedBy)
-        );
+        if (submittedBy)
+            return c.json(
+                await updateEntityMetadata(contract, id, entity, submittedBy)
+            );
+        else {
+            const admins = process.env.ADMIN_WHITELIST?.split(",") || [];
+            const payload = c.get("jwtPayload");
+            const user = payload.address;
+            const admin = admins.find((admin) =>
+                isAddressEqual(admin.split("@")[1] as `0x${string}`, user)
+            );
+            if (admin) {
+                return c.json(
+                    await updateEntityMetadata(contract, id, entity, {
+                        characterId: admin.split("@")[0],
+                        appKey: "0x0",
+                        appSig: "0x0",
+                    })
+                );
+            } else {
+                throw new Error("Unauthorized");
+            }
+        }
     } catch (e) {
         log.error(e);
         return c.text("Internal Error.", 400);
     }
 });
 
-app.use(
-    jwt({
-        secret: config.jwtSecret,
-    })
-);
 app.use(logger((str) => (new Date(), str)));
 app.post(
     "/entity/markDuplicate",
@@ -213,7 +244,7 @@ const start = async () => {
     log.info(`🎉 Redis is connected.`);
 
     // Contract
-    const port = 3001;
+    const port = 3002;
     const privateKey = config.nomlandPrivateKey;
     contract = new Contract(privateKey);
     admin = privateKeyToAddress(privateKey);

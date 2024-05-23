@@ -4,6 +4,7 @@ import { generateChallenge, signin } from "./authService";
 import { SiweChallengeSchema, SiweSigninSchema } from "./schema";
 import { logger } from "hono/logger";
 import { jwt } from "hono/jwt";
+import config from "./config";
 
 const auth = new Hono();
 
@@ -28,8 +29,9 @@ auth.post("signin", zValidator("json", SiweSigninSchema), async (c) => {
 });
 
 auth.use(
+    "/account",
     jwt({
-        secret: "secret",
+        secret: config.jwtSecret,
     })
 );
 auth.get("/account", async (c) => {

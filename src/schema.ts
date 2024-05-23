@@ -47,7 +47,7 @@ export const createRequestSchema = z.object({
 export const updateRequestSchema = z.object({
     id: union([z.string(), z.number()]), // entity id
     entity: entitySchema,
-    submittedBy: submitLogSchema,
+    submittedBy: submitLogSchema.optional(),
 });
 
 export const markDuplicateRequestSchema = z.object({

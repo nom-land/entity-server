@@ -1,7 +1,8 @@
-import { CharacterMetadata, Contract, Numberish } from "crossbell";
+import { CharacterMetadata, Contract, Indexer, Numberish } from "crossbell";
 import { createNewEntityIfNotExist } from "./create";
 import { hashOf } from "./utils";
 import { Entity } from "entity-types";
+import { isAddressEqual } from "viem";
 
 export interface SubmitLog {
     characterId: Numberish;
@@ -38,6 +39,34 @@ export async function getEntity(
     );
     return { handle, id: characterId.toString() };
 }
+
+export const getEntityById = async (
+    c: Contract,
+    admin: `0x${string}`,
+    characterId: Numberish
+) => {
+    // TODO: use permission check: c.contract.read.getOperatorPermissions();
+    // const owner = await c.contract.read.ownerOf([BigInt(characterId)]);
+
+    const indexer = new Indexer();
+    const data = await indexer.character.get(characterId);
+
+    if (data && data.metadata?.content) {
+        const hasPermission = isAddressEqual(data?.owner, admin);
+
+        const { type, connected_accounts, variant, ...metadata } = data.metadata
+            ?.content as CharacterMetadata & { variant: string };
+
+        return {
+            handle: data.handle,
+            id: data.characterId.toString(),
+            metadata,
+            hasPermission,
+        };
+    } else {
+        return null;
+    }
+};
 
 export const searchEntity = async (url: string, c: Contract, prod: boolean) => {
     const prefix = prod ? "" : "test-";
