@@ -71,7 +71,7 @@ app.get(
 );
 
 app.use(logger((str) => (new Date(), str)));
-app.get("/entity/:id", async (c) => {
+app.get("/entity/id/:id", async (c) => {
     const id = c.req.param("id");
     const result = await getEntityById(contract, admin, id);
     return c.json(result);
