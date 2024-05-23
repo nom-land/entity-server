@@ -244,7 +244,7 @@ const start = async () => {
     log.info(`🎉 Redis is connected.`);
 
     // Contract
-    const port = 3002;
+    const port = Number(process.env.PORT) || 3000;
     const privateKey = config.nomlandPrivateKey;
     contract = new Contract(privateKey);
     admin = privateKeyToAddress(privateKey);
