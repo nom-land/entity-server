@@ -5,6 +5,7 @@ import { SiweChallengeSchema, SiweSigninSchema } from "./schema";
 import { logger } from "hono/logger";
 import { jwt } from "hono/jwt";
 import config from "./config";
+import { isAddressEqual } from "viem";
 
 const auth = new Hono();
 
@@ -36,6 +37,17 @@ auth.use(
 );
 auth.get("/account", async (c) => {
     const payload = c.get("jwtPayload");
+    const user = payload.address;
+    if (!user) {
+        return c.json({ error: "Unauthorized" });
+    }
+    const admins = process.env.ADMIN_WHITELIST?.split(",") || [];
+    const admin = admins.find((admin) =>
+        isAddressEqual(admin.split("@")[1] as `0x${string}`, user)
+    );
+    if (admin) {
+        payload.admin = admin.split("@")[0];
+    }
     return c.json(payload);
 });
 
