@@ -108,9 +108,10 @@ app.post("/entity/edit", zValidator("json", updateRequestSchema), async (c) => {
     const { id, entity, submittedBy } = c.req.valid("json");
     try {
         if (submittedBy)
-            return c.json(
-                await updateEntityMetadata(contract, id, entity, submittedBy)
-            );
+            // return c.json(
+            //     await updateEntityMetadata(contract, id, entity, submittedBy)
+            // );
+            throw new Error("Unauthorized");
         else {
             const admins = process.env.ADMIN_WHITELIST?.split(",") || [];
             const payload = c.get("jwtPayload");

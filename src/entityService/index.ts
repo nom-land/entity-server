@@ -112,7 +112,6 @@ export const updateEntityMetadata = (
             const new_updated_by = ((updated_by as SubmitLog[]) || []).concat([
                 updatedBy,
             ]);
-
             // TODO: wrap it in a type
             return {
                 ...newEntity,
