@@ -50,7 +50,7 @@ export const createNewEntity = async (
             metadataOrUri: profile,
         },
         {
-            gasPrice: parseGwei("5"), // TODO?
+            gasPrice: parseGwei("3"), // TODO?
         }
     );
     return data;
