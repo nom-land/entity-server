@@ -2,6 +2,7 @@ import { CharacterMetadata, Contract } from "crossbell";
 import { log } from "../logger";
 import { Entity } from "entity-types";
 import { SubmitLog } from ".";
+import { parseGwei } from "viem";
 
 export const createNewEntityIfNotExist = async (
     c: Contract,
@@ -42,10 +43,15 @@ export const createNewEntity = async (
         "}) "
     );
 
-    const { data } = await c.character.create({
-        owner: admin,
-        handle,
-        metadataOrUri: profile,
-    });
+    const { data } = await c.character.create(
+        {
+            owner: admin,
+            handle,
+            metadataOrUri: profile,
+        },
+        {
+            gasPrice: parseGwei("3"), // TODO?
+        }
+    );
     return data;
 };
