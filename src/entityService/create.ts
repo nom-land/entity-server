@@ -33,7 +33,7 @@ export const createNewEntity = async (
         },
         variant: "entity",
     } as CharacterMetadata;
-    log.info(
+    console.log(
         "[DEBUG] c.character.create({ owner:",
         admin,
         ", handle:",
