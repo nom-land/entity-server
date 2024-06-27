@@ -39,7 +39,7 @@ export const createNewEntity = async (
         ", handle:",
         handle,
         ", metadataOrUri:",
-        profile,
+        JSON.stringify(profile, null, 2),
         "}) "
     );
 
@@ -50,7 +50,7 @@ export const createNewEntity = async (
             metadataOrUri: profile,
         },
         {
-            gasPrice: parseGwei("3"), // TODO?
+            gasPrice: parseGwei("5"), // TODO?
         }
     );
     return data;
