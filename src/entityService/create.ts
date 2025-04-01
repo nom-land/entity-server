@@ -43,15 +43,25 @@ export const createNewEntity = async (
         "}) "
     );
 
-    const { data } = await c.character.create(
-        {
-            owner: admin,
-            handle,
-            metadataOrUri: profile,
-        },
-        {
-            gasPrice: parseGwei("3"), // TODO?
-        }
-    );
-    return data;
+    try {
+        const nonce = await c.publicClient.getTransactionCount({
+            address: admin,
+        });
+
+        const { data } = await c.character.create(
+            {
+                owner: admin,
+                handle,
+                metadataOrUri: profile,
+            },
+            {
+                gasPrice: parseGwei("3"),
+                nonce: nonce,
+            }
+        );
+        return data;
+    } catch (error) {
+        log.error("Failed to create entity:", error);
+        throw error;
+    }
 };
